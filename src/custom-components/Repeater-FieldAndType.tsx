@@ -348,7 +348,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                       <ButtonGroup>
                         <IconButton
                           variant="transparent"
-                          aria-label="Edit"
+                          aria-label="Save"
                           size="small"
                           icon={<DoneIcon />}
                           onClick={onEditSaveHandler}
@@ -356,7 +356,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                         />
                         <IconButton
                           variant="transparent"
-                          aria-label="Cancel"
+                          aria-label="Cancel Edit"
                           size="small"
                           icon={<CloseIcon />}
                           onClick={onCancelEditHandler}
@@ -366,7 +366,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                       <ButtonGroup>
                         <IconButton
                           variant="transparent"
-                          aria-label="Save"
+                          aria-label="Edit"
                           size="small"
                           icon={<EditIcon />}
                           isDisabled={Boolean(editItem)}
