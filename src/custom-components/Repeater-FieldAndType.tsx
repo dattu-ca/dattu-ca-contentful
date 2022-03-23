@@ -1,12 +1,22 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { v4 as uuidv4 } from "uuid";
 import {
   Box,
   Flex,
   IconButton,
   TextInput,
-  Card,
-  Paragraph,
+  Note,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
 } from "@contentful/f36-components";
 import { DeleteIcon, CloseIcon, PlusIcon } from "@contentful/f36-icons";
 import { iFieldProps, iRepeaterParameters, iListItem } from "../models";
@@ -15,8 +25,16 @@ import { isValidWebsite, isValideEmail } from "../utils";
 const RepeaterFieldAndType = (props: iFieldProps) => {
   const parameters = props.sdk.parameters.instance as iRepeaterParameters;
   const [list, setList] = useState(
-    (props.sdk.field.getValue() || []) as iListItem[]
+    (props.sdk.field.getValue()) as iListItem[]
   );
+
+  useEffect(() => {
+    if(typeof list === "undefined"){
+      props.sdk.field.setValue([])
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [list])
+
   const [newItem, setNewItem] = useState({
     id: uuidv4(),
     value: "",
@@ -166,104 +184,88 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
 
   return (
     <Box>
-      {list
-        .sort((a, b) => a.index - b.index)
-        .map((item) => {
-          return (
-            <Flex
-              key={item.id}
-              justifyContent="space-between"
-              alignItems="center"
-              fullWidth={true}
-              gap="spacingS"
-              paddingBottom="spacingXs"
-              marginBottom="spacingS"
-              style={{
-                borderBottom: "1px solid #CECECE",
-              }}
-            >
-              <Flex
-                justifyContent="space-between"
-                alignItems="center"
-                fullWidth={true}
-                gap="spacingS"
-              >
-                <Box>{item.value}</Box>
-                <Box>{item.type}</Box>
-              </Flex>
-
-              <Box>
-                <IconButton
-                  variant="transparent"
-                  aria-label="Delete"
-                  size="small"
-                  icon={<DeleteIcon />}
-                  onClick={onDeleteHandler.bind(this, item.id)}
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell style={{ width: "60%" }}>{parameters.label}</TableCell>
+            <TableCell style={{ width: "30%" }}>Type</TableCell>
+            <TableCell />
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          <Fragment>
+            {(list || [])
+              .sort((a, b) => a.index - b.index)
+              .map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell style={{ wordBreak: "break-all" }}>
+                    {item.value}
+                  </TableCell>
+                  <TableCell>{item.type}</TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      variant="transparent"
+                      aria-label="Delete"
+                      size="small"
+                      icon={<DeleteIcon />}
+                      onClick={onDeleteHandler.bind(this, item.id)}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            <TableRow>
+              <TableCell>
+                <TextInput
+                  aria-label={`New ${parameters.label}`}
+                  placeholder={`New ${parameters.label}`}
+                  type={inputType}
+                  onChange={onChangeValueHandler}
+                  value={newItem.value}
+                  name="value"
+                  isInvalid={!validation.value.valid}
                 />
-              </Box>
-            </Flex>
-          );
-        })}
-      <Card>
-        <Paragraph>New {parameters.label}</Paragraph>
-        <Flex
-          key={newItem.id}
-          justifyContent="space-between"
-          alignItems="center"
-          fullWidth={true}
-          gap="spacingS"
-        >
-          <Flex
-            justifyContent="space-between"
-            alignItems="center"
-            fullWidth={true}
-            gap="spacingS"
-          >
-            <Box style={{ width: "100%" }}>
-              <TextInput
-                aria-label={parameters.label}
-                placeholder={parameters.label}
-                type={inputType}
-                onChange={onChangeValueHandler}
-                value={newItem.value}
-                name="value"
-                isInvalid={!validation.value.valid}
-              />
-            </Box>
-            <Box style={{ width: "100%" }}>
-              <TextInput
-                aria-label="Type"
-                placeholder="Type"
-                type="text"
-                onChange={onChangeValueHandler}
-                value={newItem.type}
-                name="type"
-                isInvalid={!validation.type.valid}
-              />
-            </Box>
-          </Flex>
-          <Flex justifyContent="flex-end" alignItems="flex-end" gap="spacingS">
-            <Box>
-              <IconButton
-                variant="positive"
-                aria-label="Add"
-                size="small"
-                icon={<PlusIcon />}
-                onClick={onSaveHandler}
-              />
-            </Box>
-            <Box>
-              <IconButton
-                variant="negative"
-                aria-label="Clear"
-                size="small"
-                icon={<CloseIcon />}
-                onClick={onCancelAddHandler}
-              />
-            </Box>
-          </Flex>
-        </Flex>
-      </Card>
+              </TableCell>
+              <TableCell>
+                <TextInput
+                  aria-label="Type"
+                  placeholder="Type"
+                  type="text"
+                  onChange={onChangeValueHandler}
+                  value={newItem.type}
+                  name="type"
+                  isInvalid={!validation.type.valid}
+                />
+              </TableCell>
+              <TableCell>
+                <Flex
+                  justifyContent="flex-end"
+                  alignItems="flex-end"
+                  gap="spacingS"
+                >
+                  <Box>
+                    <IconButton
+                      variant="positive"
+                      aria-label="Add"
+                      size="small"
+                      icon={<PlusIcon />}
+                      onClick={onSaveHandler}
+                    />
+                  </Box>
+                  <Box>
+                    <IconButton
+                      variant="negative"
+                      aria-label="Clear"
+                      size="small"
+                      icon={<CloseIcon />}
+                      onClick={onCancelAddHandler}
+                    />
+                  </Box>
+                </Flex>
+              </TableCell>
+            </TableRow>
+          </Fragment>
+        </TableBody>
+      </Table>
     </Box>
   );
 };
