@@ -21,6 +21,8 @@ import {
 import {
   DeleteIcon,
   CloseIcon,
+  EditIcon,
+  DoneIcon,
   PlusIcon,
   ArrowUpTrimmedIcon,
   ArrowDownIcon,
@@ -31,13 +33,28 @@ import { isValidWebsite, isValideEmail } from "../utils";
 const RepeaterFieldAndType = (props: iFieldProps) => {
   const parameters = props.sdk.parameters.instance as iRepeaterParameters;
   const [list, setList] = useState(props.sdk.field.getValue() as iListItem[]);
+  const [editItem, setEditItem] = useState<iListItem | undefined>(undefined);
 
-  useEffect(() => {
-    if (typeof list === "undefined") {
-      props.sdk.field.setValue([]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list]);
+  const [validation, setValidation] = useState({
+    value: {
+      valid: false,
+      message: "Required",
+    },
+    type: {
+      valid: true,
+      message: "",
+    },
+  });
+  const [editItemValidation, setEditItemValidation] = useState({
+    value: {
+      valid: true,
+      message: "",
+    },
+    type: {
+      valid: true,
+      message: "",
+    },
+  });
 
   const [newItem, setNewItem] = useState({
     id: uuidv4(),
@@ -46,16 +63,12 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
     index: 0,
   } as iListItem);
 
-  const [validation, setvalidation] = useState({
-    value: {
-      valid: false,
-      message: "Required",
-    },
-    type: {
-      valid: false,
-      message: "Required",
-    },
-  });
+  useEffect(() => {
+    if (typeof list === "undefined") {
+      props.sdk.field.setValue([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [list]);
 
   props.sdk.field.onValueChanged((value) => {
     if (value !== list && typeof value !== "undefined") {
@@ -83,70 +96,104 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
     } as iListItem);
   };
 
-  const doValidation = useCallback(() => {
-    let isValid = true;
-    if (newItem.value.length === 0) {
-      isValid = false;
-      setvalidation((prev) => ({
-        ...prev,
-        value: {
-          valid: false,
-          message: "Required",
-        },
-      }));
-    } else if (inputType === "url" && !isValidWebsite(newItem.value)) {
-      isValid = false;
-      setvalidation((prev) => ({
-        ...prev,
-        value: {
-          valid: false,
-          message: "Invalid Format",
-        },
-      }));
-    } else if (inputType === "email" && !isValideEmail(newItem.value)) {
-      isValid = false;
-      setvalidation((prev) => ({
-        ...prev,
-        value: {
-          valid: false,
-          message: "Invalid Format",
-        },
-      }));
-    } else {
-      setvalidation((prev) => ({
-        ...prev,
+  const doValidation = useCallback(
+    (item) => {
+      let newValidation = {
         value: {
           valid: true,
           message: "",
         },
-      }));
-    }
-
-    if (newItem.type.length === 0) {
-      isValid = false;
-      setvalidation((prev) => ({
-        ...prev,
-        type: {
-          valid: false,
-          message: "Required",
-        },
-      }));
-    } else {
-      setvalidation((prev) => ({
-        ...prev,
         type: {
           valid: true,
           message: "",
         },
-      }));
-    }
+      };
+      if (item) {
+        if (item.value.length === 0) {
+          newValidation = {
+            ...newValidation,
+            value: {
+              valid: false,
+              message: "Required",
+            },
+          };
+        } else if (inputType === "url" && !isValidWebsite(item.value)) {
+          newValidation = {
+            ...newValidation,
+            value: {
+              valid: false,
+              message: "Invalid Format",
+            },
+          };
+        } else if (inputType === "email" && !isValideEmail(item.value)) {
+          newValidation = {
+            ...newValidation,
+            value: {
+              valid: false,
+              message: "Invalid Format",
+            },
+          };
+        }
 
-    return isValid;
-  }, [inputType, newItem.value, newItem.type]);
+        // if (item.type.length === 0) {
+        //   newValidation = {
+        //     ...newValidation,
+        //     type: {
+        //       valid: false,
+        //       message: "Required",
+        //     },
+        //   };
+        // }
+      }
+
+      return newValidation;
+    },
+    [inputType]
+  );
 
   useEffect(() => {
-    doValidation();
-  }, [doValidation]);
+    const newValidation = doValidation(newItem);
+    setValidation(newValidation);
+  }, [doValidation, newItem]);
+
+  useEffect(() => {
+    const newValidation = doValidation(editItem);
+    setEditItemValidation(newValidation);
+  }, [doValidation, editItem]);
+
+  const onEditStartHandler = (id: string) => {
+    const item = list.find((item) => item.id === id);
+    setEditItem(item);
+  };
+
+  const onCancelEditHandler = () => {
+    setEditItem(undefined);
+  };
+
+  const onChangeEditItemValueHandler = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setEditItem(
+      (prev) =>
+        ({
+          ...prev,
+          [event.target.name]: event.target.value,
+        } as iListItem)
+    );
+  };
+
+  const onEditSaveHandler = () => {
+    if (!Object.values(editItemValidation).some((item) => !item.valid)) {
+      const newList = [...list];
+      const item = newList.find((item) => item.id === editItem?.id);
+      if (item && editItem) {
+        item.value = editItem.value;
+        item.type = editItem.type;
+        props.sdk.field.setValue(newList);
+        setEditItem(undefined);
+      }
+    }
+  };
 
   const onDeleteHandler = (id: string) => {
     const newList = list.filter((item) => item.id !== id);
@@ -168,12 +215,8 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
     }));
   };
 
-  const isValid = () => {
-    return !Object.values(validation).some((item) => !item.valid);
-  };
-
   const onSaveHandler = () => {
-    if (isValid()) {
+    if (!Object.values(validation).some((item) => !item.valid)) {
       const newList = [
         ...list,
         {
@@ -195,6 +238,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
       props.sdk.field.setValue(newList.sort((a, b) => a.index - b.index));
     }
   };
+
   const onMoveDownHandler = (id: string) => {
     const index = list.find((item) => item.id === id)?.index;
     if (
@@ -242,7 +286,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                         size="small"
                         icon={<ArrowUpTrimmedIcon />}
                         onClick={onMoveUpHandler.bind(this, item.id)}
-                        isDisabled={item.index === 0}
+                        isDisabled={item.index === 0 || Boolean(editItem)}
                       />
                       <IconButton
                         style={{
@@ -254,26 +298,86 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                         size="small"
                         icon={<ArrowDownIcon />}
                         onClick={onMoveDownHandler.bind(this, item.id)}
-                        isDisabled={item.index === (list || []).length - 1}
+                        isDisabled={
+                          item.index === (list || []).length - 1 ||
+                          Boolean(editItem)
+                        }
                       />
                     </Stack>
                   </TableCell>
                   <TableCell
                     style={{ wordBreak: "break-all", verticalAlign: "middle" }}
                   >
-                    {item.value}
+                    {typeof editItem !== "undefined" &&
+                    editItem.id === item.id ? (
+                      <TextInput
+                        aria-label={`Edit ${parameters.label}`}
+                        placeholder={`Edit ${parameters.label}`}
+                        type={inputType}
+                        onChange={onChangeEditItemValueHandler}
+                        value={editItem.value}
+                        name="value"
+                        isInvalid={!editItemValidation.value.valid}
+                      />
+                    ) : (
+                      <span>{item.value}</span>
+                    )}
                   </TableCell>
                   <TableCell style={{ verticalAlign: "middle" }}>
-                    {item.type}
+                    {typeof editItem !== "undefined" &&
+                    editItem.id === item.id ? (
+                      <TextInput
+                        aria-label={`Edit Type`}
+                        placeholder={`Edit Type`}
+                        type="text"
+                        onChange={onChangeEditItemValueHandler}
+                        value={editItem.type}
+                        name="type"
+                        isInvalid={!editItemValidation.type.valid}
+                      />
+                    ) : (
+                      <span>{item.type}</span>
+                    )}
                   </TableCell>
                   <TableCell align="right" style={{ verticalAlign: "middle" }}>
-                    <IconButton
-                      variant="transparent"
-                      aria-label="Delete"
-                      size="small"
-                      icon={<DeleteIcon />}
-                      onClick={onDeleteHandler.bind(this, item.id)}
-                    />
+                    {typeof editItem !== "undefined" &&
+                    editItem.id === item.id ? (
+                      <ButtonGroup>
+                        <IconButton
+                          variant="positive"
+                          aria-label="Delete"
+                          size="small"
+                          icon={<DoneIcon />}
+                          onClick={onEditSaveHandler}
+                        />
+                        <IconButton
+                          variant="negative"
+                          aria-label="Cancel"
+                          size="small"
+                          icon={<CloseIcon />}
+                          onClick={onCancelEditHandler}
+                        />
+                      </ButtonGroup>
+                    ) : (
+                      <ButtonGroup>
+                        <IconButton
+                          variant="positive"
+                          aria-label="Delete"
+                          size="small"
+                          icon={<EditIcon />}
+                          isDisabled={Boolean(editItem)}
+                          onClick={onEditStartHandler.bind(this, item.id)}
+                        />
+                        <IconButton
+                          variant="negative"
+                          aria-label="Delete"
+                          size="small"
+                          icon={<DeleteIcon />}
+                          isDisabled={Boolean(editItem)}
+                          onClick={onDeleteHandler.bind(this, item.id)}
+                        />
+                      </ButtonGroup>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
