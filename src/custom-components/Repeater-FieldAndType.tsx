@@ -70,6 +70,9 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list]);
 
+  const isValid = (validation: any) =>
+    !Object.values(validation).some((item: any) => !item.valid);
+
   props.sdk.field.onValueChanged((value) => {
     if (value !== list && typeof value !== "undefined") {
       setList(value as iListItem[]);
@@ -183,7 +186,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
   };
 
   const onEditSaveHandler = () => {
-    if (!Object.values(editItemValidation).some((item) => !item.valid)) {
+    if (isValid(editItemValidation)) {
       const newList = [...list];
       const item = newList.find((item) => item.id === editItem?.id);
       if (item && editItem) {
@@ -216,7 +219,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
   };
 
   const onSaveHandler = () => {
-    if (!Object.values(validation).some((item) => !item.valid)) {
+    if (isValid(validation)) {
       const newList = [
         ...list,
         {
@@ -344,14 +347,15 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                     editItem.id === item.id ? (
                       <ButtonGroup>
                         <IconButton
-                          variant="positive"
-                          aria-label="Delete"
+                          variant="transparent"
+                          aria-label="Edit"
                           size="small"
                           icon={<DoneIcon />}
                           onClick={onEditSaveHandler}
+                          isDisabled={!isValid(editItemValidation)}
                         />
                         <IconButton
-                          variant="negative"
+                          variant="transparent"
                           aria-label="Cancel"
                           size="small"
                           icon={<CloseIcon />}
@@ -361,15 +365,15 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                     ) : (
                       <ButtonGroup>
                         <IconButton
-                          variant="positive"
-                          aria-label="Delete"
+                          variant="transparent"
+                          aria-label="Save"
                           size="small"
                           icon={<EditIcon />}
                           isDisabled={Boolean(editItem)}
                           onClick={onEditStartHandler.bind(this, item.id)}
                         />
                         <IconButton
-                          variant="negative"
+                          variant="transparent"
                           aria-label="Delete"
                           size="small"
                           icon={<DeleteIcon />}
@@ -408,14 +412,15 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
               <TableCell>
                 <ButtonGroup>
                   <IconButton
-                    variant="positive"
+                    variant="transparent"
                     aria-label="Add"
                     size="small"
                     icon={<PlusIcon />}
                     onClick={onSaveHandler}
+                    isDisabled={!isValid(validation)}
                   />
                   <IconButton
-                    variant="negative"
+                    variant="transparent"
                     aria-label="Clear"
                     size="small"
                     icon={<CloseIcon />}
