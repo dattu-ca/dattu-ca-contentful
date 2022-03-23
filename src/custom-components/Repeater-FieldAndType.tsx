@@ -11,7 +11,6 @@ import {
   Flex,
   IconButton,
   TextInput,
-  Note,
   Table,
   TableHead,
   TableBody,
