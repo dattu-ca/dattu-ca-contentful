@@ -8,7 +8,7 @@ import React, {
 import { v4 as uuidv4 } from "uuid";
 import {
   Box,
-  Flex,
+  ButtonGroup,
   IconButton,
   TextInput,
   Table,
@@ -197,7 +197,11 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
   };
   const onMoveDownHandler = (id: string) => {
     const index = list.find((item) => item.id === id)?.index;
-    if (list.length > 1 && typeof index !== "undefined" && index < list.length) {
+    if (
+      list.length > 1 &&
+      typeof index !== "undefined" &&
+      index < list.length
+    ) {
       const newList = [...list];
       newList[index + 1].index = index;
       newList[index].index = index + 1;
@@ -222,7 +226,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
               .sort((a, b) => a.index - b.index)
               .map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell style={{verticalAlign: 'middle'}}>
+                  <TableCell style={{ verticalAlign: "middle" }}>
                     <Stack
                       flexDirection="column"
                       margin="none"
@@ -254,11 +258,15 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                       />
                     </Stack>
                   </TableCell>
-                  <TableCell style={{ wordBreak: "break-all", verticalAlign: 'middle' }}>
+                  <TableCell
+                    style={{ wordBreak: "break-all", verticalAlign: "middle" }}
+                  >
                     {item.value}
                   </TableCell>
-                  <TableCell style={{verticalAlign: 'middle'}}>{item.type}</TableCell>
-                  <TableCell align="right" style={{verticalAlign: 'middle'}}>
+                  <TableCell style={{ verticalAlign: "middle" }}>
+                    {item.type}
+                  </TableCell>
+                  <TableCell align="right" style={{ verticalAlign: "middle" }}>
                     <IconButton
                       variant="transparent"
                       aria-label="Delete"
@@ -294,30 +302,22 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                 />
               </TableCell>
               <TableCell>
-                <Flex
-                  justifyContent="flex-end"
-                  alignItems="flex-end"
-                  gap="spacingS"
-                >
-                  <Box>
-                    <IconButton
-                      variant="positive"
-                      aria-label="Add"
-                      size="small"
-                      icon={<PlusIcon />}
-                      onClick={onSaveHandler}
-                    />
-                  </Box>
-                  <Box>
-                    <IconButton
-                      variant="transparent"
-                      aria-label="Clear"
-                      size="small"
-                      icon={<CloseIcon />}
-                      onClick={onCancelAddHandler}
-                    />
-                  </Box>
-                </Flex>
+                <ButtonGroup>
+                  <IconButton
+                    variant="positive"
+                    aria-label="Add"
+                    size="small"
+                    icon={<PlusIcon />}
+                    onClick={onSaveHandler}
+                  />
+                  <IconButton
+                    variant="transparent"
+                    aria-label="Clear"
+                    size="small"
+                    icon={<CloseIcon />}
+                    onClick={onCancelAddHandler}
+                  />
+                </ButtonGroup>
               </TableCell>
             </TableRow>
           </Fragment>
