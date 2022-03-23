@@ -9,13 +9,13 @@ const Field = (props: iFieldProps) => {
   const parameters: iRepeaterParameters = props.sdk.parameters
     .instance as iRepeaterParameters;
 
-  console.log("location", location)
   switch (location) {
     case "repeater-field": {
-      console.log("parameters.inputType", parameters.inputType)
       switch (parameters.inputType) {
         case "url":
-          console.log("in URL")
+        case "email":
+        case "tel":
+          console.log("parameters.inputType", parameters.inputType);
           return <RepeaterFieldAndType {...props} />;
 
         default:
