@@ -311,7 +311,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                     onClick={onSaveHandler}
                   />
                   <IconButton
-                    variant="transparent"
+                    variant="negative"
                     aria-label="Clear"
                     size="small"
                     icon={<CloseIcon />}
