@@ -16,23 +16,28 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Stack,
 } from "@contentful/f36-components";
-import { DeleteIcon, CloseIcon, PlusIcon } from "@contentful/f36-icons";
+import {
+  DeleteIcon,
+  CloseIcon,
+  PlusIcon,
+  ArrowUpTrimmedIcon,
+  ArrowDownIcon,
+} from "@contentful/f36-icons";
 import { iFieldProps, iRepeaterParameters, iListItem } from "../models";
 import { isValidWebsite, isValideEmail } from "../utils";
 
 const RepeaterFieldAndType = (props: iFieldProps) => {
   const parameters = props.sdk.parameters.instance as iRepeaterParameters;
-  const [list, setList] = useState(
-    (props.sdk.field.getValue()) as iListItem[]
-  );
+  const [list, setList] = useState(props.sdk.field.getValue() as iListItem[]);
 
   useEffect(() => {
-    if(typeof list === "undefined"){
-      props.sdk.field.setValue([])
+    if (typeof list === "undefined") {
+      props.sdk.field.setValue([]);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [list]);
 
   const [newItem, setNewItem] = useState({
     id: uuidv4(),
@@ -181,12 +186,32 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
     }
   };
 
+  const onMoveUpHandler = (id: string) => {
+    const index = list.find((item) => item.id === id)?.index;
+    if (typeof index !== "undefined" && index > 0) {
+      const newList = [...list];
+      newList[index - 1].index = index;
+      newList[index].index = index - 1;
+      props.sdk.field.setValue(newList.sort((a, b) => a.index - b.index));
+    }
+  };
+  const onMoveDownHandler = (id: string) => {
+    const index = list.find((item) => item.id === id)?.index;
+    if (list.length > 1 && typeof index !== "undefined" && index < list.length) {
+      const newList = [...list];
+      newList[index + 1].index = index;
+      newList[index].index = index + 1;
+      props.sdk.field.setValue(newList.sort((a, b) => a.index - b.index));
+    }
+  };
+
   return (
     <Box>
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell style={{ width: "60%" }}>{parameters.label}</TableCell>
+            <TableCell />
+            <TableCell style={{ width: "50%" }}>{parameters.label}</TableCell>
             <TableCell style={{ width: "30%" }}>Type</TableCell>
             <TableCell />
           </TableRow>
@@ -197,11 +222,43 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
               .sort((a, b) => a.index - b.index)
               .map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell style={{ wordBreak: "break-all" }}>
+                  <TableCell style={{verticalAlign: 'middle'}}>
+                    <Stack
+                      flexDirection="column"
+                      margin="none"
+                      style={{ gap: "unset" }}
+                    >
+                      <IconButton
+                        style={{
+                          minHeight: "auto",
+                          padding: 0,
+                        }}
+                        variant="transparent"
+                        aria-label="move up"
+                        size="small"
+                        icon={<ArrowUpTrimmedIcon />}
+                        onClick={onMoveUpHandler.bind(this, item.id)}
+                        isDisabled={item.index === 0}
+                      />
+                      <IconButton
+                        style={{
+                          minHeight: "auto",
+                          padding: 0,
+                        }}
+                        variant="transparent"
+                        aria-label="move up"
+                        size="small"
+                        icon={<ArrowDownIcon />}
+                        onClick={onMoveDownHandler.bind(this, item.id)}
+                        isDisabled={item.index === (list || []).length - 1}
+                      />
+                    </Stack>
+                  </TableCell>
+                  <TableCell style={{ wordBreak: "break-all", verticalAlign: 'middle' }}>
                     {item.value}
                   </TableCell>
-                  <TableCell>{item.type}</TableCell>
-                  <TableCell align="right">
+                  <TableCell style={{verticalAlign: 'middle'}}>{item.type}</TableCell>
+                  <TableCell align="right" style={{verticalAlign: 'middle'}}>
                     <IconButton
                       variant="transparent"
                       aria-label="Delete"
@@ -213,6 +270,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                 </TableRow>
               ))}
             <TableRow>
+              <TableCell />
               <TableCell>
                 <TextInput
                   aria-label={`New ${parameters.label}`}
@@ -252,7 +310,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                   </Box>
                   <Box>
                     <IconButton
-                      variant="negative"
+                      variant="transparent"
                       aria-label="Clear"
                       size="small"
                       icon={<CloseIcon />}
