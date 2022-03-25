@@ -101,7 +101,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
 
   const doValidation = useCallback(
     (item) => {
-      let newValidation = {
+      const newValidation = {
         value: {
           valid: true,
           message: "",
@@ -113,40 +113,21 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
       };
       if (item) {
         if (item.value.length === 0) {
-          newValidation = {
-            ...newValidation,
-            value: {
-              valid: false,
-              message: "Required",
-            },
+          newValidation.value = {
+            valid: false,
+            message: "Required",
           };
         } else if (inputType === "url" && !isValidWebsite(item.value)) {
-          newValidation = {
-            ...newValidation,
-            value: {
-              valid: false,
-              message: "Invalid Format",
-            },
+          newValidation.value = {
+            valid: false,
+            message: "Invalid Format",
           };
         } else if (inputType === "email" && !isValideEmail(item.value)) {
-          newValidation = {
-            ...newValidation,
-            value: {
-              valid: false,
-              message: "Invalid Format",
-            },
+          newValidation.value = {
+            valid: false,
+            message: "Invalid Format",
           };
         }
-
-        // if (item.type.length === 0) {
-        //   newValidation = {
-        //     ...newValidation,
-        //     type: {
-        //       valid: false,
-        //       message: "Required",
-        //     },
-        //   };
-        // }
       }
 
       return newValidation;
@@ -309,7 +290,10 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
                     </Stack>
                   </TableCell>
                   <TableCell
-                    style={{ wordBreak: "break-all", verticalAlign: "middle" }}
+                    style={{
+                      wordBreak: "break-all",
+                      verticalAlign: "middle",
+                    }}
                   >
                     {typeof editItem !== "undefined" &&
                     editItem.id === item.id ? (

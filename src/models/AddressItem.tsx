@@ -1,18 +1,18 @@
 export interface iAddress {
   addressLine1: string;
-  addressLine2?: string;
-  addressLine3?: string;
+  addressLine2: string;
+  addressLine3: string;
   city: string;
   postalCode: string;
-  province?: string;
+  province: string;
   country: string;
-  mapUrl?: string;
+  mapUrl: string;
+  type: string;
 }
 
 export interface iAddressItem {
   id: string;
   value: iAddress;
-  type: string;
   index: number;
 }
 
@@ -25,9 +25,10 @@ export class Address implements iAddress {
   province = "";
   country = "";
   mapUrl = "";
+  type = "";
 
   constructor(country?: string) {
-    if(country){
+    if (country) {
       this.country = country;
     }
   }

@@ -1,16 +1,9 @@
-import React, {
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import {
   Box,
   ButtonGroup,
   IconButton,
-  TextInput,
   Table,
   TableHead,
   TableBody,
@@ -18,7 +11,6 @@ import {
   TableCell,
   Stack,
   Paragraph,
-  Autocomplete,
 } from "@contentful/f36-components";
 import {
   DeleteIcon,
@@ -29,18 +21,20 @@ import {
   ArrowUpTrimmedIcon,
   ArrowDownIcon,
 } from "@contentful/f36-icons";
-import { AutocompleteCountries, AutocompleteProvinces } from "../custom-fields";
-import { iFieldProps, iAddressItem, Address } from "../models";
+import { CompositeAddress } from "../custom-fields";
+import { iFieldProps, iAddressItem, iAddress, Address } from "../models";
 
 const RepeaterAddress = (props: iFieldProps) => {
   const [list, setList] = useState(
     props.sdk.field.getValue() as iAddressItem[]
   );
-  const [editItem, setEditItem] = useState<iAddressItem | undefined>(undefined);
-  const [newItem, setNewItem] = useState(new Address("Canada"));
 
-  const [validation, setValidation] = useState({});
-  const [editItemValidation, setEditItemValidation] = useState({});
+  const [newItem, setNewItem] = useState(new Address("Canada"));
+  const [editItemId, setEditItemId] = useState<string | undefined>(undefined);
+  const [editItem, setEditItem] = useState<iAddress | undefined>(undefined);
+
+  const [newItemIsValid, setNewItemIsValid] = useState(false);
+  const [editItemIsValid, setEditItemIsValid] = useState(true);
 
   useEffect(() => {
     if (typeof list === "undefined") {
@@ -54,9 +48,6 @@ const RepeaterAddress = (props: iFieldProps) => {
       setList(value as iAddressItem[]);
     }
   });
-
-  const isValid = (validation: any) =>
-    !Object.values(validation).some((item: any) => !item.valid);
 
   const onMoveUpHandler = (id: string) => {
     const index = list.find((item) => item.id === id)?.index;
@@ -86,6 +77,44 @@ const RepeaterAddress = (props: iFieldProps) => {
     setNewItem(new Address("Canada"));
   };
 
+  const onEditStartHandler = (id: string) => {
+    const item = list.find((item) => item.id === id);
+    setEditItemId(item?.id);
+    setEditItem(item?.value);
+  };
+
+  const onCancelEditHandler = () => {
+    setEditItemId(undefined);
+    setEditItem(undefined);
+  };
+
+  const onChangeEditItem = useCallback((field: string, value: string) => {
+    setEditItem(
+      (prev) =>
+        ({
+          ...prev,
+          [field]: value,
+        } as iAddress)
+    );
+  }, []);
+
+  const onValidationChangeEditItem = useCallback((isValid: boolean) => {
+    setEditItemIsValid(isValid);
+  }, []);
+
+  const onEditSaveHandler = () => {
+    if (editItemIsValid) {
+      const newList = [...list];
+      const item = newList.find((item) => item.id === editItemId);
+      if (item && editItem) {
+        item.value = { ...editItem };
+        props.sdk.field.setValue(newList);
+        setEditItem(undefined);
+        setEditItemId(undefined);
+      }
+    }
+  };
+
   const onDeleteHandler = (id: string) => {
     const newList = list.filter((item) => item.id !== id);
     newList.forEach((item, index) => ({
@@ -99,34 +128,23 @@ const RepeaterAddress = (props: iFieldProps) => {
     resetNewItem();
   };
 
-  const onChangeValueHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onChangeNewItem = useCallback((field: string, value: string) => {
     setNewItem((prev) => ({
       ...prev,
-      [event.target.name]: event.target.value,
-    }));
-  };
-
-  const onChangeCountryHandler = useCallback((value: string) => {
-    setNewItem((prev) => ({
-      ...prev,
-      country: value,
+      [field]: value,
     }));
   }, []);
 
-  const onChangeProvinceHandler = useCallback((value: string) => {
-    setNewItem((prev) => ({
-      ...prev,
-      province: value,
-    }));
+  const onValidationChangeNewItem = useCallback((isValid: boolean) => {
+    setNewItemIsValid(isValid);
   }, []);
 
   const onSaveHandler = () => {
-    if (isValid(validation)) {
+    if (newItemIsValid) {
       const newAddress: iAddressItem = {
         id: uuidv4(),
         value: newItem,
         index: list.length,
-        type: "Official",
       };
       const newList: iAddressItem[] = [...list, newAddress];
       props.sdk.field.setValue(newList);
@@ -186,77 +204,79 @@ const RepeaterAddress = (props: iFieldProps) => {
                     </Stack>
                   </TableCell>
                   <TableCell>
-                    <pre>{JSON.stringify(item, null, 2)}</pre>
+                    {typeof editItem !== "undefined" &&
+                    editItemId === item.id ? (
+                      <CompositeAddress
+                        item={editItem}
+                        onChange={onChangeEditItem}
+                        onValidationChange={onValidationChangeEditItem}
+                      />
+                    ) : (
+                      <div>
+                        <Paragraph>{item.value.country}</Paragraph>
+                        <Paragraph>{item.value.province}</Paragraph>
+                        <Paragraph>{item.value.addressLine1}</Paragraph>
+                        <Paragraph>{item.value.addressLine2}</Paragraph>
+                        <Paragraph>{item.value.addressLine3}</Paragraph>
+                        <Paragraph>{item.value.city}</Paragraph>
+                        <Paragraph>{item.value.postalCode}</Paragraph>
+                        <Paragraph>{item.value.mapUrl}</Paragraph>
+                        <Paragraph>{item.value.type}</Paragraph>
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <ButtonGroup>
-                      <IconButton
-                        variant="transparent"
-                        aria-label="Delete"
-                        size="small"
-                        icon={<DeleteIcon />}
-                        isDisabled={Boolean(editItem)}
-                        onClick={onDeleteHandler.bind(this, item.id)}
-                      />
-                    </ButtonGroup>
+                    {typeof editItem !== "undefined" &&
+                    editItemId === item.id ? (
+                      <ButtonGroup>
+                        <IconButton
+                          variant="transparent"
+                          aria-label="Save"
+                          size="small"
+                          icon={<DoneIcon />}
+                          onClick={onEditSaveHandler}
+                          isDisabled={!editItemIsValid}
+                        />
+                        <IconButton
+                          variant="transparent"
+                          aria-label="Cancel Edit"
+                          size="small"
+                          icon={<CloseIcon />}
+                          onClick={onCancelEditHandler}
+                        />
+                      </ButtonGroup>
+                    ) : (
+                      <ButtonGroup>
+                        <IconButton
+                          variant="transparent"
+                          aria-label="Edit"
+                          size="small"
+                          icon={<EditIcon />}
+                          isDisabled={Boolean(editItem)}
+                          onClick={onEditStartHandler.bind(this, item.id)}
+                        />
+                        <IconButton
+                          variant="transparent"
+                          aria-label="Delete"
+                          size="small"
+                          icon={<DeleteIcon />}
+                          isDisabled={Boolean(editItem)}
+                          onClick={onDeleteHandler.bind(this, item.id)}
+                        />
+                      </ButtonGroup>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
             <TableRow>
               <TableCell />
               <TableCell>
-                <Stack flexDirection="column" spacing="spacingS">
-                  <Paragraph>New Address</Paragraph>
-                  <AutocompleteCountries
-                    value={newItem.country}
-                    onChange={onChangeCountryHandler}
-                  />
-                  <AutocompleteProvinces
-                    country={newItem.country}
-                    value={newItem.province}
-                    onChange={onChangeProvinceHandler}
-                  />
-                  <TextInput
-                    aria-label="Address Line 1"
-                    placeholder="Address Line 1"
-                    type="text"
-                    onChange={onChangeValueHandler}
-                    value={newItem.addressLine1}
-                    name="addressLine1"
-                  />
-                  <TextInput
-                    aria-label="Address Line 2"
-                    placeholder="Address Line 2"
-                    type="text"
-                    onChange={onChangeValueHandler}
-                    value={newItem.addressLine2}
-                    name="addressLine2"
-                  />
-                  <TextInput
-                    aria-label="Address Line 3"
-                    placeholder="Address Line 3"
-                    type="text"
-                    onChange={onChangeValueHandler}
-                    value={newItem.addressLine3}
-                    name="addressLine3"
-                  />
-                  <TextInput
-                    aria-label="City"
-                    placeholder="City"
-                    type="text"
-                    onChange={onChangeValueHandler}
-                    value={newItem.city}
-                    name="city"
-                  />
-                  <TextInput
-                    aria-label="Postal Code"
-                    placeholder="Postal Code"
-                    type="text"
-                    onChange={onChangeValueHandler}
-                    value={newItem.postalCode}
-                    name="postalCode"
-                  />
-                </Stack>
+                <Paragraph>New Address</Paragraph>
+                <CompositeAddress
+                  item={newItem}
+                  onChange={onChangeNewItem}
+                  onValidationChange={onValidationChangeNewItem}
+                />
               </TableCell>
               <TableCell style={{ verticalAlign: "bottom" }}>
                 <ButtonGroup>
@@ -266,7 +286,7 @@ const RepeaterAddress = (props: iFieldProps) => {
                     size="small"
                     icon={<PlusIcon />}
                     onClick={onSaveHandler}
-                    isDisabled={!isValid(validation)}
+                    isDisabled={!newItemIsValid}
                   />
                   <IconButton
                     variant="transparent"

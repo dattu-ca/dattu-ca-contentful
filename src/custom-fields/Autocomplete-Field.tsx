@@ -1,22 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Autocomplete, Box } from "@contentful/f36-components";
 import { EditIcon } from "@contentful/f36-icons";
-import { iAutocompleteCountriesProps } from "../models";
-
-import COUNTRIES from "../utils/country-state.list.json";
+import { iAutocompleteProps } from "../models";
 
 const hoverStyle = {
   color: "black",
   textDecoration: "underline",
-  fontWeight: "bold",
 };
 
-const countriesList = COUNTRIES.countries.map((item) => item.country);
-
-const AutocompleteCountries = (props: iAutocompleteCountriesProps) => {
+const AutocompleteField = (props: iAutocompleteProps) => {
   const [editMode, setEditMode] = useState(false);
   const [hover, setHover] = useState(false);
-  const [filteredItems, setFilteredItems] = useState<string[]>(countriesList);
+  const [filteredItems, setFilteredItems] = useState<string[]>(props.list);
 
   useEffect(() => {
     setEditMode(false);
@@ -24,12 +19,12 @@ const AutocompleteCountries = (props: iAutocompleteCountriesProps) => {
 
   useEffect(() => {
     if (editMode) {
-      setFilteredItems(countriesList);
+      setFilteredItems(props.list);
     }
-  }, [editMode]);
+  }, [editMode, props.list]);
 
   const handleInputValueChange = (value: string) => {
-    const newFilteredItems = countriesList.filter((item) =>
+    const newFilteredItems = props.list.filter((item) =>
       item.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredItems(newFilteredItems);
@@ -47,7 +42,7 @@ const AutocompleteCountries = (props: iAutocompleteCountriesProps) => {
             cursor: "pointer",
             ...(hover ? hoverStyle : {}),
           }}
-          onClick={() => setEditMode(prev => !prev)}
+          onClick={() => setEditMode((prev) => !prev)}
           onMouseEnter={() => {
             setHover(true);
           }}
@@ -55,7 +50,12 @@ const AutocompleteCountries = (props: iAutocompleteCountriesProps) => {
             setHover(false);
           }}
         >
-          {props.value}
+          {props.value && props.value !== "" && <strong>{props.value}</strong>}
+          {(!props.value || props.value === "") && (
+            <span style={{ color: props.isInvalid ? "#BD002A" : "#888888" }}>
+              Click to select a {props.label}
+            </span>
+          )}
           <EditIcon
             size="small"
             style={{
@@ -71,11 +71,12 @@ const AutocompleteCountries = (props: iAutocompleteCountriesProps) => {
           onInputValueChange={handleInputValueChange}
           onSelectItem={handleSelectItem}
           listWidth="full"
-          placeholder="Select Country"
+          placeholder={`Select ${props.label}`}
+          isInvalid={props.isInvalid}
         />
       )}
     </Box>
   );
 };
 
-export  {AutocompleteCountries};
+export { AutocompleteField };
