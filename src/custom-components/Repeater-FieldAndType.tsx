@@ -70,14 +70,14 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [list]);
 
-  const isValid = (validation: any) =>
-    !Object.values(validation).some((item: any) => !item.valid);
-
   props.sdk.field.onValueChanged((value) => {
     if (value !== list && typeof value !== "undefined") {
       setList(value as iListItem[]);
     }
   });
+
+  const isValid = (validation: any) =>
+    !Object.values(validation).some((item: any) => !item.valid);
 
   const inputType = useMemo(() => {
     if (parameters.inputType === "url") {
@@ -90,7 +90,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
     return "text";
   }, [parameters.inputType]);
 
-  const resetNewValue = () => {
+  const resetNewItem = () => {
     setNewItem({
       id: uuidv4(),
       value: "",
@@ -208,7 +208,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
   };
 
   const onCancelAddHandler = () => {
-    resetNewValue();
+    resetNewItem();
   };
 
   const onChangeValueHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -228,7 +228,7 @@ const RepeaterFieldAndType = (props: iFieldProps) => {
         } as iListItem,
       ];
       props.sdk.field.setValue(newList);
-      resetNewValue();
+      resetNewItem();
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import RepeaterFieldAndType from "../custom-components/Repeater-FieldAndType";
+import {RepeaterFieldAndType, RepeaterAddress} from "../custom-components";
 import { iFieldProps, iRepeaterParameters } from "../models";
 
 const Field = (props: iFieldProps) => {
@@ -17,10 +17,12 @@ const Field = (props: iFieldProps) => {
         case "tel":
           console.log("parameters.inputType", parameters.inputType);
           return <RepeaterFieldAndType {...props} />;
-
         default:
           return null;
       }
+    }
+    case "repeater-address":{
+      return <RepeaterAddress {...props} />;
     }
     default:
       return null;
